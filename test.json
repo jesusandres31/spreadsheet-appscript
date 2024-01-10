@@ -1,0 +1,46 @@
+[
+  {
+    "_Efectivo": {
+      "Obra Social": 5300,
+      "Impuestos Afip": 2090,
+      "Servicios": 11300,
+      "Otros gastos": 4200,
+      "Clientes": 0,
+      "Sueldos": 5000
+    }
+  },
+  {
+    "_ICBC": {
+      "Mantenimieto de cuenta": 30,
+      "IVA-Iva Percepcion": 786.48,
+      "Otros deb": 52,
+      "Otros gastos": 2397,
+      "Cursos": 236,
+      "Impuestos s/deb-cred": 1890.33,
+      "Impuestos Afip": 2069,
+      "Transf cuentas propias": 0,
+      "Sueldos": 51138,
+      "Servicios": 1088,
+      "Tarjetas": 4937,
+      "Honorarios ": 336,
+      "Snacks": 16
+    }
+  },
+  {
+    "_BcoCtes": {
+      "Clientes": 0,
+      "Impuestos s/deb-cred": 1247.15,
+      "Sueldos": 2800,
+      "Impuestos Afip": 8344,
+      "Mantenimieto de cuenta": 383,
+      "IVA-Iva Percepcion": 804.81
+    }
+  },
+  {
+    "_Mercuri": {
+      "Otros gastos": 181.95999999999998,
+      "Transf p/ broker": 650,
+      "Transf cuentas propias": 0
+    }
+  }
+]

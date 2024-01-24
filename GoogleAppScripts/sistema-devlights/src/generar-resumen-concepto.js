@@ -9,7 +9,7 @@ function generarResumenConcepto() {
    *
    */
   const JUMP = {
-    ROW: 6,
+    ROW: 7,
     COL: 4,
   };
 
@@ -31,12 +31,24 @@ function generarResumenConcepto() {
 
   const TABLE_TITLES = Object.values(COLUMN);
 
-  const TOTAL_CELL = 'TOTAL USD:';
+  const TOTAL = {
+    USD: 'Total (USD):',
+    AJUSTADO: 'Total Ajustado (USD):',
+  };
 
   const COTIZACION = {
     sheetName: 'COTIZACION',
     range: 'A2:B13',
   };
+
+  const EXCLUDED_CATEGORIES = [
+    // Concepto Egreso:
+    'Tranf letsbit cripto',
+    'Tranf letsbit efectivo',
+    'Transf cuentas propias',
+    // Concepto Ingreso:
+    'Transf cuentas propias',
+  ];
 
   const MONTHS = [
     ['Enero'],
@@ -62,6 +74,7 @@ function generarResumenConcepto() {
     yellow: '#ffff91',
     purple: '#c1b3e6',
     bold: 'bold',
+    excluded: '#faeeed',
   };
 
   /**
@@ -238,7 +251,10 @@ function generarResumenConcepto() {
         titleCell = titleCell.offset(0, 1);
 
         // Set column total
-        setColTotal(j, titleCell);
+        setColTotal(j, titleCell, 1, TOTAL.USD);
+
+        // Set column total ajustado
+        setColTotal(j, titleCell, 2, TOTAL.AJUSTADO);
       }
     }
   }
@@ -260,7 +276,8 @@ function generarResumenConcepto() {
       colData,
       sheetData
     );
-    fillTotal(i, k, tableTitle, colData, egresoData.total);
+    fillTotal(i, k, tableTitle, colData, egresoData.total, 0);
+    fillTotal(i, k, tableTitle, colData, egresoData.totalAjustado, 1);
     fillColumn(i, k, tableTitle, colData, egresoData.resultArray);
   }
 
@@ -273,14 +290,19 @@ function generarResumenConcepto() {
       for (var j = 0; j < data.length; j++) {
         var currentCell = cell.offset(j, 0);
         currentCell.setValue(data[j][0]);
+        console.log(data[j][0]);
+        console.log(EXCLUDED_CATEGORIES.includes(data[j][0]));
+        if (EXCLUDED_CATEGORIES.includes(data[j][0])) {
+          currentCell.setBackground(STYLE.excluded);
+        }
       }
     }
   }
 
-  function fillTotal(i, k, tableTitle, columnName, total) {
+  function fillTotal(i, k, tableTitle, columnName, total, jump) {
     if (tableTitle === columnName) {
       var cell = summarySheet.getRange(
-        i * JUMP.ROW + TABLE_TITLES.length,
+        i * JUMP.ROW + TABLE_TITLES.length + jump,
         k * JUMP.COL + TABLE_TITLES.indexOf(columnName) + 1
       );
       var totalCell = cell.offset(conceptoEgresoData.length, 0);
@@ -290,10 +312,10 @@ function generarResumenConcepto() {
     }
   }
 
-  function setColTotal(j, titleCell) {
+  function setColTotal(j, titleCell, jump, label) {
     if (TABLE_TITLES[j] === COLUMN.ConceptoEgreso) {
-      var totalCell = titleCell.offset(conceptoEgresoData.length + 1, -1);
-      totalCell.setValue(TOTAL_CELL);
+      var totalCell = titleCell.offset(conceptoEgresoData.length + jump, -1);
+      totalCell.setValue(label);
       totalCell.setFontWeight(STYLE.bold);
     }
   }
@@ -317,6 +339,7 @@ function generarResumenConcepto() {
       var data = sheet.getDataRange().getValues();
       var categoryTotals = {};
       var total = 0;
+      var totalAjustado = 0;
 
       for (var j = 1; j < data.length; j++) {
         var date = data[j][0];
@@ -342,6 +365,11 @@ function generarResumenConcepto() {
             if (!isNaN(parseFloat(amount))) {
               total += parseFloat(amount);
               categoryTotals[category] += parseFloat(amount);
+
+              // calc total ajustado
+              if (!EXCLUDED_CATEGORIES.includes(category)) {
+                totalAjustado += parseFloat(amount);
+              }
             }
           }
         }
@@ -361,10 +389,15 @@ function generarResumenConcepto() {
         var cotizacionMes = contizacionPeriodo[targetMonth];
         if (!isNaN(cotizacionMes) && cotizacionMes !== 0) {
           total = total / cotizacionMes;
+          totalAjustado = totalAjustado / cotizacionMes;
         }
       }
 
-      return { resultArray: resultArray, total: total };
+      return {
+        resultArray: resultArray,
+        total: total,
+        totalAjustado: totalAjustado,
+      };
     }
     return { resultArray: [], total: 0 };
   }

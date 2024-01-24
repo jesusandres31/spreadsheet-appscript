@@ -120,19 +120,19 @@ function generarFlujoCaja() {
    */
   function sumTotals(startCol) {
     var resultArray = [];
-    let rowJump = tableRowsLength + 2;
+    let rowJump = tableRowsLength + 3;
     var sumAllValues = 0;
 
     for (
-      var startRow = tableRowsLength;
+      var startRow = tableRowsLength + 1;
       startRow <= conceptSummarySheet.getLastRow();
       startRow += rowJump
     ) {
       var sumColumnValues = 0;
       for (var col = startCol; col <= sheetCount * JUMP.COL; col += JUMP.COL) {
         var cellValue = conceptSummarySheet.getRange(startRow, col).getValue();
-        console.log(startRow, col);
-        console.log({ cellValue });
+        // console.log(startRow, col);
+        // console.log({ cellValue });
         if (!isNaN(cellValue) && typeof cellValue === 'number') {
           sumColumnValues += Number(cellValue.toFixed(2));
         } else {

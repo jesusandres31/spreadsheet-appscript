@@ -14,6 +14,10 @@ function generarFlujoCaja() {
     FLUJO_DE_CAJA: 'FLUJO_DE_CAJA',
   };
 
+  const COLUMN = {
+    CONCEPTO_EGRESO: 'B2:B',
+  };
+
   const BANKS_KEY_CHAR = '_';
 
   const START_COL = {
@@ -32,7 +36,6 @@ function generarFlujoCaja() {
   };
 
   const JUMP = {
-    ROW: 24,
     COL: 4,
   };
 
@@ -66,6 +69,8 @@ function generarFlujoCaja() {
     }
   }
 
+  var tableRowsLength = countConceptoEgresoRows() + 4;
+
   /**
    *
    *
@@ -80,11 +85,13 @@ function generarFlujoCaja() {
     const saldoInicial = Array.from({ length: 13 }, (_, index) => 0);
     writeValuesToSheet(saldoInicial, START_ROW.saldoInicial);
 
-    // ingreso, egreso
-    const egresoTotals = sumTotals(START_COL.egreso);
+    // ingreso
     const ingresoTotals = sumTotals(START_COL.ingreso);
-    writeValuesToSheet(egresoTotals, START_ROW.egreso);
     writeValuesToSheet(ingresoTotals, START_ROW.ingreso);
+
+    // egreso
+    const egresoTotals = sumTotals(START_COL.egreso);
+    writeValuesToSheet(egresoTotals, START_ROW.egreso);
 
     // ganancia/perdida
     const gananciaPerdida = calcularGananciaPerdida(
@@ -98,7 +105,7 @@ function generarFlujoCaja() {
     writeValuesToSheet(acumulado, START_ROW.acumulado, true);
 
     // rentabilidad
-    const rentabilidad = calcularRentabilidad(gananciaPerdida, ingresoTotals);
+    const rentabilidad = calcularRentabilidad(egresoTotals, ingresoTotals);
     writeValuesToSheet(rentabilidad, START_ROW.rentabilidad, true, '0.00%');
   })();
 
@@ -113,18 +120,24 @@ function generarFlujoCaja() {
    */
   function sumTotals(startCol) {
     var resultArray = [];
-    let rowJump = JUMP.ROW + 2;
+    let rowJump = tableRowsLength + 3;
     var sumAllValues = 0;
 
     for (
-      var startRow = JUMP.ROW;
+      var startRow = tableRowsLength + 1;
       startRow <= conceptSummarySheet.getLastRow();
       startRow += rowJump
     ) {
       var sumColumnValues = 0;
       for (var col = startCol; col <= sheetCount * JUMP.COL; col += JUMP.COL) {
         var cellValue = conceptSummarySheet.getRange(startRow, col).getValue();
-        sumColumnValues += cellValue;
+        // console.log(startRow, col);
+        // console.log({ cellValue });
+        if (!isNaN(cellValue) && typeof cellValue === 'number') {
+          sumColumnValues += Number(cellValue.toFixed(2));
+        } else {
+          // Logger.log('Non-numeric value encountered at row %s, col %s', startRow, col);
+        }
       }
 
       sumAllValues += sumColumnValues;
@@ -175,12 +188,33 @@ function generarFlujoCaja() {
     return acumuladoArray;
   }
 
-  function calcularRentabilidad(gananciaPerdida, ingresos) {
+  function calcularRentabilidad(egreso, ingresos) {
     var rentabilidadArray = [];
-    for (var i = 0; i < gananciaPerdida.length; i++) {
-      var resultado = ingresos[i] !== 0 ? gananciaPerdida[i] / ingresos[i] : 0;
+    for (var i = 0; i < egreso.length; i++) {
+      var resultado =
+        egreso[i] !== 0 ? (ingresos[i] - egreso[i]) / egreso[i] : 0;
       rentabilidadArray.push(resultado);
     }
     return rentabilidadArray;
+  }
+
+  /**
+   *
+   *
+   *
+   * UTIITIES
+   *
+   *
+   *
+   */
+  function countConceptoEgresoRows() {
+    var datosFormSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(
+      SHEET.DATOS_FORMULA
+    );
+    var columnaConceptoEgreso = datosFormSheet.getRange(
+      COLUMN.CONCEPTO_EGRESO + datosFormSheet.getLastRow()
+    );
+    var totalRows = columnaConceptoEgreso.getValues().filter(String).length;
+    return totalRows;
   }
 }
